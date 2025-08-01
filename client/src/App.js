@@ -1,38 +1,78 @@
 import React, { useState } from "react";
 import Chat from "./components/Chat";
+import "../src/styles/AnimatedBackground.css";
 
 function App() {
+  const [joined, setJoined] = useState(false);
   const [username, setUsername] = useState("");
-  const [isJoined, setIsJoined] = useState(false);
+  const [room, setRoom] = useState("");
 
-  const handleJoin = (e) => {
-    e.preventDefault();
-    if (username.trim() !== "") {
-      setIsJoined(true);
-    }
-  };
+  return (
+    <div>
+      {/* Background */}
+      <div className="animated-background">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
 
-  if (!isJoined) {
-    return (
-      <div style={{ padding: "2rem" }}>
-        <h1>Enter your username</h1>
-        <form onSubmit={handleJoin}>
+      {joined ? (
+        <Chat username={username} room={room} />
+      ) : (
+        <div
+          style={{
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            fontFamily: "'Nunito', sans-serif",
+            padding: "1rem",
+          }}
+        >
+          <h1 style={{ color: "#ff80ab", marginBottom: "1rem" }}>Welcome to Study Chat 💬</h1>
           <input
-            type="text"
-            placeholder="Your name"
+            placeholder="Enter username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            required
+            style={{
+              padding: "0.5rem",
+              borderRadius: "1rem",
+              marginBottom: "1rem",
+              border: "1px solid #ccc",
+              width: "200px",
+            }}
           />
-          <button type="submit" style={{ marginLeft: "1rem" }}>
+          <input
+            placeholder="Enter room name"
+            value={room}
+            onChange={(e) => setRoom(e.target.value)}
+            style={{
+              padding: "0.5rem",
+              borderRadius: "1rem",
+              marginBottom: "1rem",
+              border: "1px solid #ccc",
+              width: "200px",
+            }}
+          />
+          <button
+            onClick={() => username && room && setJoined(true)}
+            style={{
+              padding: "0.5rem 1rem",
+              backgroundColor: "#cce5ff",
+              border: "none",
+              borderRadius: "1rem",
+              fontWeight: "bold",
+            }}
+          >
             Join Chat
           </button>
-        </form>
-      </div>
-    );
-  }
-
-  return <Chat username={username} />;
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default App;

@@ -1,55 +1,37 @@
+// server/server.js
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
-const mongoose = require("mongoose");
+const socketIo = require("socket.io");
 const cors = require("cors");
-require("dotenv").config();
 
 const app = express();
-app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST"],
-  credentials: true,
-}));
-app.use(express.json());
-
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.log("MongoDB connection error:", err));
-
-app.get("/", (req, res) => {
-  res.send("Backend is live!");
-});
+app.use(cors());
 
 const server = http.createServer(app);
-const io = new Server(server, {
+const io = socketIo(server, {
   cors: {
     origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-    credentials: true,
   },
 });
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("A user connected");
 
-  socket.on("join", (username) => {
-    socket.username = username;
-    console.log(`${username} joined the chat`);
+  socket.on("join_room", (room) => {
+    socket.join(room);
+    console.log(`User joined room: ${room}`);
   });
 
-  socket.on("send_message", (data) => {
-    console.log("Message received:", data);
-    io.emit("receive_message", data);
+  socket.on("send_message", ({ room, ...msg }) => {
+    io.to(room).emit("receive_message", msg);
   });
 
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.username || socket.id}`);
+    console.log("A user disconnected");
   });
 });
 
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
-  console.log(`Server with socket.io running on port ${PORT}`);
+server.listen(5001, () => {
+  console.log("Server is running on port 5001");
 });
 
