@@ -1,44 +1,55 @@
-// Import required modules
 const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
-const StudyRoom = require("./models/StudyRoom"); // Import your MongoDB model
 
-// Create Express app
 const app = express();
-app.use(cors());
-app.use(express.json()); // Parse incoming JSON
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
+app.use(express.json());
 
-// Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch(err => console.log("MongoDB connection error:", err));
+  .catch((err) => console.log("MongoDB connection error:", err));
 
-// Root route for testing
 app.get("/", (req, res) => {
   res.send("Backend is live!");
 });
 
-// POST route to create a study room
-app.post("/study-room", async (req, res) => {
-  console.log("📩 POST /study-room hit");
-  console.log("🧾 Request body:", req.body);
-
-  const { name } = req.body;
-
-  try {
-    const newRoom = await StudyRoom.create({ name });
-    console.log("✅ Room created:", newRoom);
-    res.status(201).json(newRoom);
-  } catch (err) {
-    console.error("❌ Error creating room:", err);
-    res.status(500).json({ error: "Failed to create room" });
-  }
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
 });
 
-// Start the server
-app.listen(5000, () => {
-  console.log("Server is running on port 5000");
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("join", (username) => {
+    socket.username = username;
+    console.log(`${username} joined the chat`);
+  });
+
+  socket.on("send_message", (data) => {
+    console.log("Message received:", data);
+    io.emit("receive_message", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.username || socket.id}`);
+  });
+});
+
+const PORT = process.env.PORT || 5001;
+server.listen(PORT, () => {
+  console.log(`Server with socket.io running on port ${PORT}`);
 });
 

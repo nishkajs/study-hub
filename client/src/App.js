@@ -1,48 +1,38 @@
 import React, { useState } from "react";
+import Chat from "./components/Chat";
 
 function App() {
-  const [roomName, setRoomName] = useState("");
-  const [response, setResponse] = useState(null);
+  const [username, setUsername] = useState("");
+  const [isJoined, setIsJoined] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleJoin = (e) => {
     e.preventDefault();
-
-    try {
-      const res = await fetch("http://localhost:5000/study-room", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: roomName }),
-      });
-
-      const data = await res.json();
-      setResponse(data);
-      setRoomName(""); // Clear the input
-    } catch (err) {
-      console.error("❌ Error creating room:", err);
+    if (username.trim() !== "") {
+      setIsJoined(true);
     }
   };
 
-  return (
-    <div style={{ padding: "2rem", fontFamily: "Arial" }}>
-      <h1>Create a Study Room</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Room name"
-          value={roomName}
-          onChange={(e) => setRoomName(e.target.value)}
-          required
-        />
-        <button type="submit" style={{ marginLeft: "1rem" }}>Create</button>
-      </form>
+  if (!isJoined) {
+    return (
+      <div style={{ padding: "2rem" }}>
+        <h1>Enter your username</h1>
+        <form onSubmit={handleJoin}>
+          <input
+            type="text"
+            placeholder="Your name"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+          <button type="submit" style={{ marginLeft: "1rem" }}>
+            Join Chat
+          </button>
+        </form>
+      </div>
+    );
+  }
 
-      {response && (
-        <div style={{ marginTop: "1rem" }}>
-          ✅ <strong>Room created:</strong> {response.name}
-        </div>
-      )}
-    </div>
-  );
+  return <Chat username={username} />;
 }
 
 export default App;
